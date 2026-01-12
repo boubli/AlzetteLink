@@ -16,17 +16,18 @@ jobs:
         working-directory: bridge-service
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: bridge-service/package-lock.json
-      
+
       - name: Install dependencies
-        run: npm ci || npm install
-      
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
       - name: Check syntax
         run: node --check index.js
 
@@ -39,20 +40,15 @@ jobs:
         working-directory: web-dashboard
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: web-dashboard/package-lock.json
-      
+
       - name: Install dependencies
-        run: npm ci || npm install
-      
-      - name: Lint
-        run: npm run lint --if-present
-      
+        run: npm install
+
       - name: Build
         run: npm run build
 
@@ -65,15 +61,15 @@ jobs:
         working-directory: simulator
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       - name: Install dependencies
         run: npm install
-      
+
       - name: Check syntax
         run: node --check simulate.js
 
@@ -83,6 +79,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Validate docker-compose.yml
         run: docker compose config --quiet
