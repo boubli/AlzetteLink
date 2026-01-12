@@ -1,0 +1,18 @@
+{
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2,
+    "files.eol": "\n",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "css.validate": false,
+    "tailwindCSS.includeLanguages": {
+        "javascript": "javascript",
+        "javascriptreact": "javascript"
+    },
+    "eslint.workingDirectories": [
+        "./web-dashboard",
+        "./bridge-service",
+        "./simulator"
+    ],
+    "platformio-ide.autoRebuildAutocompleteIndex": true
+}
