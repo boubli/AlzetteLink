@@ -25,6 +25,7 @@
 **AlzetteLink** is a comprehensive Industrial IoT (IIoT) educational platform designed to bridge the gap between operational technology (OT) and information technology (IT). It demonstrates the complete flow of data from a low-level microcontroller (ESP32) to a high-level web dashboard via modern industry-standard protocols.
 
 Designed for technical students at **Lycée Technique**, this project introduces core Industry 4.0 concepts:
+
 - **Edge Computing**: ESP32 sensor logic.
 - **Connectivity**: MQTT (Message Queuing Telemetry Transport).
 - **Data Persistence**: InfluxDB (Time-series database).
@@ -80,36 +81,47 @@ graph LR
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - [Docker & Docker Compose](https://www.docker.com/)
 - [Node.js](https://nodejs.org/) (v16+)
 - [VS Code](https://code.visualstudio.com/) with PlatformIO (recommended) or Arduino IDE.
 
 ### 1. Infrastructure Setup
+
 Start the local server environment:
+
 ```bash
 docker-compose up -d
 ```
+
 This launches Mosquitto (MQTT Broker) on ports `1883` (TCP) and `9001` (WebSockets), and InfluxDB on `8086`.
 
 ### 2. Backend Bridge Service
+
 Install and run the data logger:
+
 ```bash
 cd bridge-service
 npm install
 node index.js
 ```
-*Note: Ensure you update the `.env` or configuration lines in `index.js` with your InfluxDB token if you want to save data.*
+
+_Note: Ensure you update the `.env` or configuration lines in `index.js` with your InfluxDB token if you want to save data._
 
 ### 3. Web Dashboard
+
 Launch the real-time visualization:
+
 ```bash
 cd web-dashboard
 npm install
 npm run dev
 ```
+
 Open `http://localhost:5173` in your browser.
 
 ### 4. Firmware (ESP32)
+
 1.  Open `/firmware` in **PlatformIO** (VS Code) or Arduino IDE.
 2.  Edit `src/main.cpp`:
     - Update `ssid` and `password` with your WiFi credentials.
@@ -118,12 +130,15 @@ Open `http://localhost:5173` in your browser.
 4.  Open the Serial Monitor to verify connection.
 
 ### 5. Simulator (No Hardware Required)
+
 If you don't have an ESP32, use the simulator to test the dashboard:
+
 ```bash
 cd simulator
 npm install
 npm start
 ```
+
 The simulator will publish fake sensor data every 2 seconds.
 
 ---
@@ -133,20 +148,36 @@ The simulator will publish fake sensor data every 2 seconds.
 This project is a boilerplate. Your goal is to expand it into a real industrial monitoring solution.
 
 ### Level 1: The Basics 🟢
+
 - [ ] **Modify the Data**: Change the dummy temperature generation in `main.cpp` to simulate a "Sine Wave" or connect a real DHT11/DHT22 sensor.
 - [ ] **Custom Topic**: Change the MQTT topic from `data` to `factory/machine01/telemetry` and update the Dashboard and Bridge to match.
 
 ### Level 2: Advanced Logic 🟡
+
 - [ ] **Alert System**: Modify the React dashboard to flash **RED** if the temperature exceeds 30°C.
 - [ ] **Two-Way Communication**: Add a "Stop" button on the Dashboard that sends an MQTT message back to the ESP32 to turn on an LED (simulating a machine stop).
 
 ### Level 3: Industry 4.0 Pro 🔴
+
 - [ ] **Multi-Sensor Support**: Connect a second ESP32. Modify the dashboard to handle multiple devices dynamically based on their `machine_id`.
 - [ ] **Historical Analysis**: Update the Dashboard to fetch generic historical data from InfluxDB instead of just showing the live buffer.
 
 ---
 
+## 👥 Contributors
+
+Thanks to these amazing people who have contributed to AlzetteLink:
+
+| Contributor                                                                                                                                          | Contribution                                    |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| [![Omar-Alshaer](https://github.com/Omar-Alshaer.png?size=50)](https://github.com/Omar-Alshaer) **[@Omar-Alshaer](https://github.com/Omar-Alshaer)** | Data Export (CSV/JSON), Chart & Component fixes |
+
+Want to contribute? Check out [CONTRIBUTING.md](CONTRIBUTING.md)!
+
+---
+
 ## 🔗 References & Credits
+
 - **Project Link**: [GitHub Repository](https://github.com/boubli/AlzetteLink)
 - **Author**: [Boubli Tech](https://boubli.tech)
 - **Inspiration**: Built upon experience with ESP8266 automation projects (e.g., [Wifi-Jammer-NodeMCU](https://github.com/boubli/Wifi-Jammer-NodeMCU)).
