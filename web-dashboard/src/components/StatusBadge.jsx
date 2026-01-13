@@ -1,35 +1,27 @@
 /**
  * StatusBadge Component
- * 
- * Displays the machine status with appropriate color coding.
+ * Displays machine status with color coding
  */
+export default function StatusBadge({ status, className = '' }) {
+  const getStatusClass = (s) => {
+    switch (s?.toLowerCase()) {
+      case 'running': return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'warning': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      case 'idle': return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
+      case 'error':
+      case 'stopped': return 'bg-red-500/20 text-red-400 border-red-500/30';
+      default: return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
+    }
+  };
 
-export default function StatusBadge({ status }) {
-    const getStatusClass = (s) => {
-        switch (s?.toLowerCase()) {
-            case 'running':
-                return 'status-running';
-            case 'warning':
-                return 'status-warning';
-            case 'idle':
-                return 'status-idle';
-            case 'error':
-            case 'stopped':
-                return 'status-error';
-            default:
-                return 'status-idle';
-        }
-    };
+  const statusClass = getStatusClass(status);
 
-    return (
-        <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold uppercase tracking-wide ${getStatusClass(status)}`}>
-            <span className="relative flex h-2 w-2">
-                {status === 'running' && (
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                )}
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${status === 'running' ? 'bg-green-400' : status === 'warning' ? 'bg-yellow-400' : 'bg-slate-400'}`}></span>
-            </span>
-            {status || 'Unknown'}
-        </span>
-    );
+  return (
+    <span className={`
+      inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border
+      backdrop-blur-sm ${statusClass} ${className}
+    `}>
+      {status || 'Unknown'}
+    </span>
+  );
 }
