@@ -70,11 +70,26 @@ graph LR
     Dashboard -.->|"Query History"| DB
 ```
 
-### 📸 Dashboard Demo
+### 📸 Dashboard v2.0
 
 <p align="center">
-  <img src="web-dashboard/src/assets/Screenshot.png" alt="AlzetteLink Dashboard Demo" width="800"/>
+  <img src="docs/screenshots/dashboard-overview.png" alt="AlzetteLink Dashboard — Multi-device overview with glassmorphism UI" width="800"/>
 </p>
+
+<p align="center"><i>Multi-device overview with live sparklines, status badges, and stat pills</i></p>
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/device-detail.png" alt="Device detail view with gauge and chart" width="400"/></td>
+    <td><img src="docs/screenshots/dashboard-light-mode.png" alt="Light mode theme" width="400"/></td>
+  </tr>
+  <tr>
+    <td align="center"><i>Device detail — gradient gauge, counter, trend chart with annotations</i></td>
+    <td align="center"><i>Light mode theme support</i></td>
+  </tr>
+</table>
+
+> 💡 **No ESP32?** Click **Demo Mode** in the sidebar to explore the dashboard with simulated device data.
 
 ---
 

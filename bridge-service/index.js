@@ -25,14 +25,19 @@ const config = {
     },
     influx: {
         url: process.env.INFLUX_URL || 'http://localhost:8086',
-        token: process.env.INFLUX_TOKEN || 'YOUR_INFLUXDB_TOKEN_HERE',
+        token: process.env.INFLUX_TOKEN || 'alzettelink-dev-token',
         org: process.env.INFLUX_ORG || 'lycee',
         bucket: process.env.INFLUX_BUCKET || 'sensors',
+    },
+    // Batch writes: flush every N messages or every M milliseconds
+    batch: {
+        size: parseInt(process.env.BATCH_SIZE, 10) || 10,
+        flushIntervalMs: parseInt(process.env.BATCH_FLUSH_MS, 10) || 5000,
     },
 };
 
 // ============================================================
-// VALIDATION HELPERS
+// VALIDATION HELPERS (exported for testing)
 // ============================================================
 
 /**
@@ -83,22 +88,61 @@ function safeJsonParse(str) {
     }
 }
 
+// Export for testing
+module.exports = { validatePayload, safeJsonParse };
+
+// ============================================================
+// Only start the service when run directly (not when imported for tests)
+// ============================================================
+if (require.main === module) {
+
+// ============================================================
+// STARTUP VALIDATION
+// ============================================================
+
+function validateConfig() {
+    const warnings = [];
+
+    if (config.influx.token === 'YOUR_INFLUXDB_TOKEN_HERE') {
+        console.error('');
+        console.error('❌ FATAL: InfluxDB token is still set to the placeholder value.');
+        console.error('   Please set the INFLUX_TOKEN environment variable or update .env');
+        console.error('   Default dev token: alzettelink-dev-token');
+        console.error('');
+        process.exit(1);
+    }
+
+    if (config.influx.token === 'alzettelink-dev-token') {
+        warnings.push('⚠️  Using default development InfluxDB token — do not use in production');
+    }
+
+    return warnings;
+}
+
 // ============================================================
 // STARTUP BANNER
 // ============================================================
 
 console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║           AlzetteLink Bridge Service v1.0                 ║
+║           AlzetteLink Bridge Service v1.1                 ║
 ╚═══════════════════════════════════════════════════════════╝
 `);
+
+const startupWarnings = validateConfig();
+
 console.log('📋 Configuration:');
 console.log(`   MQTT Broker:  ${config.mqtt.broker}`);
 console.log(`   MQTT Topic:   ${config.mqtt.topic}`);
 console.log(`   InfluxDB:     ${config.influx.url}`);
 console.log(`   Organization: ${config.influx.org}`);
 console.log(`   Bucket:       ${config.influx.bucket}`);
+console.log(`   Batch Size:   ${config.batch.size} messages`);
+console.log(`   Flush Every:  ${config.batch.flushIntervalMs}ms`);
 console.log('');
+
+startupWarnings.forEach(w => console.log(`   ${w}`));
+if (startupWarnings.length > 0) console.log('');
 
 // ============================================================
 // INFLUXDB SETUP
@@ -109,7 +153,12 @@ const influxDB = new InfluxDB({
     token: config.influx.token,
 });
 
-const writeApi = influxDB.getWriteApi(config.influx.org, config.influx.bucket);
+const writeApi = influxDB.getWriteApi(config.influx.org, config.influx.bucket, 'ns', {
+    batchSize: config.batch.size,
+    flushInterval: config.batch.flushIntervalMs,
+    maxRetries: 3,
+    retryJitter: 200,
+});
 writeApi.useDefaultTags({ service: 'alzettelink-bridge' });
 
 // ============================================================
@@ -131,18 +180,34 @@ let stats = {
     errors: 0,
 };
 
-mqttClient.on('connect', () => {
-    console.log('✅ Connected to MQTT Broker');
+let subscribeRetries = 0;
+const MAX_SUBSCRIBE_RETRIES = 5;
 
+function subscribeToTopic() {
     mqttClient.subscribe(config.mqtt.topic, { qos: 1 }, (err) => {
         if (!err) {
+            subscribeRetries = 0;
             console.log(`✅ Subscribed to topic: ${config.mqtt.topic}`);
             console.log('🎧 Listening for messages...\n');
         } else {
-            console.error('❌ Failed to subscribe:', err.message);
-            process.exit(1);
+            subscribeRetries++;
+            console.error(`❌ Failed to subscribe (attempt ${subscribeRetries}/${MAX_SUBSCRIBE_RETRIES}):`, err.message);
+
+            if (subscribeRetries < MAX_SUBSCRIBE_RETRIES) {
+                const delay = Math.min(1000 * Math.pow(2, subscribeRetries), 30000);
+                console.log(`🔄 Retrying in ${delay / 1000}s...`);
+                setTimeout(subscribeToTopic, delay);
+            } else {
+                console.error('❌ Max subscribe retries reached. Exiting.');
+                process.exit(1);
+            }
         }
     });
+}
+
+mqttClient.on('connect', () => {
+    console.log('✅ Connected to MQTT Broker');
+    subscribeToTopic();
 });
 
 mqttClient.on('reconnect', () => {
@@ -162,7 +227,7 @@ mqttClient.on('error', (err) => {
 // MESSAGE HANDLING
 // ============================================================
 
-mqttClient.on('message', async (topic, message) => {
+mqttClient.on('message', (topic, message) => {
     stats.received++;
     const payload = message.toString();
     const timestamp = new Date().toISOString();
@@ -205,12 +270,11 @@ mqttClient.on('message', async (topic, message) => {
         point.floatField('humidity', data.humidity);
     }
 
-    // Write to InfluxDB
+    // Write to InfluxDB (batched — no manual flush per message)
     try {
         writeApi.writePoint(point);
-        await writeApi.flush();
         stats.saved++;
-        console.log('   💾 Saved to InfluxDB');
+        console.log('   💾 Queued for InfluxDB (batched)');
     } catch (e) {
         stats.errors++;
         console.log(`   ❌ InfluxDB Error: ${e.message}`);
@@ -235,7 +299,7 @@ async function shutdown(signal) {
     // Close connections
     try {
         await writeApi.close();
-        console.log('✅ InfluxDB connection closed');
+        console.log('✅ InfluxDB connection closed (flushed remaining batch)');
     } catch (e) {
         console.error('⚠️ Error closing InfluxDB:', e.message);
     }
@@ -255,3 +319,5 @@ async function shutdown(signal) {
 
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
+
+} // end if (require.main === module)

@@ -2,29 +2,149 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   AlzetteLink v2.0 — Design System
+   ============================================================ */
+
+/* --- Theme Variables --- */
 :root {
   --color-primary: #3b82f6;
+  --color-primary-glow: rgba(59, 130, 246, 0.25);
   --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
+
+  /* Surface colors (dark theme defaults) */
+  --surface-bg: #0f172a;
+  --surface-1: rgba(30, 41, 59, 0.5);
+  --surface-2: rgba(51, 65, 85, 0.3);
+  --surface-border: rgba(71, 85, 105, 0.4);
+  --surface-border-hover: rgba(100, 116, 139, 0.5);
+
+  /* Text */
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  /* Sidebar */
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 64px;
+}
+
+[data-theme="light"] {
+  --surface-bg: #f1f5f9;
+  --surface-1: rgba(255, 255, 255, 0.7);
+  --surface-2: rgba(241, 245, 249, 0.5);
+  --surface-border: rgba(203, 213, 225, 0.6);
+  --surface-border-hover: rgba(148, 163, 184, 0.5);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
 }
 
 body {
-  @apply bg-slate-900 text-slate-100;
-  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--surface-bg);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
-/* Animated pulse for live indicator */
-@keyframes pulse-ring {
-  0% {
-    transform: scale(0.8);
-    opacity: 1;
-  }
+/* ============================================================
+   Glassmorphism Components
+   ============================================================ */
 
-  100% {
-    transform: scale(2);
-    opacity: 0;
-  }
+/* Logo visibility — white PNG needs invert in light theme */
+[data-theme="light"] .sidebar-logo {
+  filter: brightness(0) drop-shadow(0 0 6px rgba(59,130,246,0.15));
+}
+
+.glass-card {
+  background: var(--surface-1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--surface-border);
+  border-radius: 16px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  border-color: var(--surface-border-hover);
+}
+
+.glass-panel {
+  background: var(--surface-1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--surface-border);
+}
+
+.glass-sidebar {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-right: 1px solid rgba(51, 65, 85, 0.4);
+}
+
+[data-theme="light"] .glass-sidebar {
+  background: rgba(255, 255, 255, 0.8);
+  border-right: 1px solid rgba(203, 213, 225, 0.6);
+}
+
+/* Gradient border card */
+.glass-card-gradient {
+  position: relative;
+  background: var(--surface-1);
+  backdrop-filter: blur(16px);
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.glass-card-gradient::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 17px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3), rgba(6, 182, 212, 0.1));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+
+/* Loading skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--surface-2) 25%,
+    var(--surface-border) 50%,
+    var(--surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Pulse ring for live indicator */
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.pulse-live {
+  position: relative;
 }
 
 .pulse-live::before {
@@ -39,24 +159,11 @@ body {
 
 /* Gauge animation */
 @keyframes gauge-fill {
-  from {
-    stroke-dashoffset: 283;
-  }
+  from { stroke-dashoffset: 283; }
 }
 
 .gauge-circle {
   animation: gauge-fill 1s ease-out forwards;
-}
-
-/* Card hover effect */
-.card {
-  @apply bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
 
 /* Status badge styles */
@@ -68,10 +175,42 @@ body {
   @apply bg-yellow-500/20 text-yellow-400 border-yellow-500/30;
 }
 
+.status-critical {
+  @apply bg-red-500/20 text-red-400 border-red-500/30;
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+}
+
 .status-idle {
   @apply bg-slate-500/20 text-slate-400 border-slate-500/30;
 }
 
 .status-error {
   @apply bg-red-500/20 text-red-400 border-red-500/30;
+}
+
+/* ============================================================
+   Scrollbar
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }

@@ -1,15 +1,17 @@
 {
   "name": "alzettelink-simulator",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Simulates ESP32 sensor data for testing without hardware",
   "main": "simulate.js",
+  "author": "Boubli Tech <contact@boubli.tech>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "node simulate.js"
   },
   "dependencies": {
     "mqtt": "^5.14.1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  }
 }

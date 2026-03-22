@@ -8,6 +8,10 @@
  *   cd simulator
  *   npm install
  *   node simulate.js
+ * 
+ * Environment variables:
+ *   MQTT_BROKER  - Broker URL (default: mqtt://localhost:1883)
+ *   MACHINE_ID   - Machine identifier (default: sim-esp32-01)
  */
 
 const mqtt = require('mqtt');
@@ -15,11 +19,13 @@ const mqtt = require('mqtt');
 // Configuration
 const BROKER_URL = process.env.MQTT_BROKER || 'mqtt://localhost:1883';
 const TOPIC = 'alzette/machine/data';
+const MACHINE_ID = process.env.MACHINE_ID || 'sim-esp32-01';
 const INTERVAL_MS = 2000; // Send data every 2 seconds
 
 console.log('🔌 AlzetteLink Simulator');
 console.log(`📡 Connecting to: ${BROKER_URL}`);
 console.log(`📨 Publishing to: ${TOPIC}`);
+console.log(`🏷️  Machine ID:    ${MACHINE_ID}`);
 console.log('---');
 
 const client = mqtt.connect(BROKER_URL);
@@ -40,15 +46,18 @@ client.on('connect', () => {
         const noise = (Math.random() - 0.5) * 2;
         const temp = baseTemp + tempVariation + noise;
 
-        // Simulate status changes
+        // Simulate status changes based on temperature
         let status = 'running';
         if (counter % 20 === 0) {
             status = 'idle';
         } else if (temp > 28) {
             status = 'warning';
+        } else if (temp > 32) {
+            status = 'critical';
         }
 
         const payload = {
+            machine_id: MACHINE_ID,
             temp: parseFloat(temp.toFixed(2)),
             status: status,
             counter: counter
